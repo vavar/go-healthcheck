@@ -13,8 +13,7 @@ func fetch(url string, wg *sync.WaitGroup, ch chan<- HTTPResult) {
         ch <- HTTPResult{ false, time.Since(start).Nanoseconds() }
         return
     }
-    success := resp.StatusCode >= 200 && resp.StatusCode < 300
-    ch <- HTTPResult{ success, time.Since(start).Nanoseconds() }
+    ch <- HTTPResult{ (resp.StatusCode == http.StatusOK), time.Since(start).Nanoseconds() }
 }
 
 func asyncFetch(urls []string) (chan HTTPResult) {
@@ -33,17 +32,17 @@ func asyncFetch(urls []string) (chan HTTPResult) {
 }
 
 // Return summary healthcheck result for providing URLs 
-func FetchURLs(urls []string) HealthCheckResult {
-    queue := asyncFetch(urls)
-    result := HealthCheckResult{ 0, 0, 0, 0}
+func (h *Healthcheck) Check() Report {
+    queue := asyncFetch(h.urls)
+    report := Report{ 0, 0, 0, 0}
     for t := range queue {
         if t.Success {
-            result.Success = result.Success + 1
+            report.Success++
         } else {
-            result.Failure = result.Failure + 1
+            report.Failure++
         }
-        result.TotalWebsites = result.TotalWebsites + 1
-        result.TotalTime = result.TotalTime + t.Time
+        report.TotalWebsites++
+        report.TotalTime = report.TotalTime + t.Time
     }
-    return result
+    return report
 }

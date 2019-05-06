@@ -4,10 +4,23 @@ import (
 	"strings"
     "os"
     "encoding/csv"
+    "encoding/json"
+    "io/ioutil"
 )
 
+func loadConfig(fileName string) (*Config,error) {
+    jsonFile, err := os.Open(fileName)
+    if err != nil {
+        return nil,err
+    }
+    byteValue, _ := ioutil.ReadAll(jsonFile)
+    var config Config
+    json.Unmarshal(byteValue, &config)
+    return &config, nil
+}
+
 // Parsing URLs with CSV format
-func ParseURLs(filePath string) ([]string, error) {
+func parseURLs(filePath string) ([]string, error) {
     f, err := os.Open(filePath)
     if err != nil {
         return nil, err

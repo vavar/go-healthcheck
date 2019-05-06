@@ -7,22 +7,26 @@ import (
     "fmt"
 )
 
-const (
-    reportURL = "https://hiring-challenge.appspot.com/healthcheck/report"
-)
-
 //Report via Healcheck Report API
-func Report(apiToken string, result HealthCheckResult) {
-    b, _ := json.Marshal(result)
-    req, _ := http.NewRequest("POST", reportURL, bytes.NewBuffer(b))
-    req.Header.Set("Authorization", "Bearer " + apiToken)
+func (h *Healthcheck) Report(report Report) (error) {
+    if (h.config.ReportURL == "" || h.config.Token == "") {
+        return fmt.Errorf("missing config for ReportAPI")
+    }
+
+    b, _ := json.Marshal(report)
+    req, _ := http.NewRequest("POST", h.config.ReportURL, bytes.NewBuffer(b))
+    req.Header.Set("Authorization", "Bearer " + h.config.Token)
     req.Header.Set("Content-Type", "application/json")
 
     client := &http.Client{}
-
-    if resp, err := client.Do(req); err == nil {
-        if resp.StatusCode != http.StatusOK {
-            fmt.Printf("Sending report failed")
-        }
+    resp, err := client.Do(req)
+    if err != nil {
+        return err
     }
+
+    if resp.StatusCode != http.StatusOK {
+        return fmt.Errorf("Sending report ... failed(%d)\n", resp.StatusCode)
+    }
+
+    return nil
 }

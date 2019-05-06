@@ -13,20 +13,22 @@ func main()  {
     args := os.Args[1:]
     filePath := args[0]
 
-    urls, err := healthcheck.ParseURLs(filePath)
-    if err != nil {
+    h, err := healthcheck.NewChecker(filePath)
+    if (err != nil) {
         log.Fatal(err)
-        return;
+        return
     }
 
     fmt.Println("Perform website checking...")
-
-    result := healthcheck.FetchURLs(urls)
-    healthcheck.Report("aa", result)
-
+    result := h.Check()
+    //Send report via api
+    if err := h.Report(result); err != nil {
+        fmt.Println(err)
+    }
     fmt.Println("Done!")
-    fmt.Println()
-    fmt.Printf("Checked websites: %d\n", result.TotalWebsites)
+
+    //Print operation result to console
+    fmt.Printf("\nChecked websites: %d\n", result.TotalWebsites)
     fmt.Printf("Successful websites: %d\n", result.Success)
     fmt.Printf("Failure websites: %d\n", result.Failure)
     fmt.Printf("Total times to finished checking website: %v\n",
